@@ -1,0 +1,42 @@
+trigger:
+- main   # Runs when code is pushed to main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  containerRegistry: 'YOUR-ACR-SERVICE-CONNECTION' # Replace with your Azure DevOps service connection name
+  imageTag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildVote
+    steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: $(containerRegistry)
+        repository: votingapp/vote
+        command: buildAndPush
+        Dockerfile: vote/Dockerfile
+        tags: $(imageTag)
+
+  - job: BuildWorker
+    steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: $(containerRegistry)
+        repository: votingapp/worker
+        command: buildAndPush
+        Dockerfile: worker/Dockerfile
+        tags: $(imageTag)
+
+  - job: BuildResult
+    steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: $(containerRegistry)
+        repository: votingapp/result
+        command: buildAndPush
+        Dockerfile: result/Dockerfile
+        tags: $(imageTag)
